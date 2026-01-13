@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>free periods</title>
+    <link rel="icon" type="image/png" href="/images/pritt.png">
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --background-color: #f0f2f5;
+            --card-background: #ffffff;
+            --text-color: #333;
+            --secondary-text-color: #777;
+            --border-color: #e0e0e0;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --hover-color-light: #f0f0f0;
+        }
+
+        body.dark-mode {
+            --primary-color: #74aaff;
+            --background-color: #121212;
+            --card-background: #1e1e1e;
+            --text-color: #e0e0e0;
+            --secondary-text-color: #a0a0a0;
+            --border-color: #333;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            --hover-color-dark: #2a2a2a;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 2rem;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+            font-weight: 600;
+            font-size: 2.5rem;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        #timetable-container {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .main-tabs {
+            position: relative; 
+            display: flex;
+            justify-content: center; 
+            align-items: center;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+            gap: 25px;
+        }
+
+        .main-tab {
+            padding: 12px 5px;
+            margin-bottom: -1px; 
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--secondary-text-color);
+            background-color: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            transition: color 0.3s, border-color 0.3s;
+            text-decoration: none;
+        }
+
+        .main-tab:hover:not(.active) {
+            color: var(--primary-color);
+        }
+
+        .main-tab.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        .dark-mode-toggle {
+            position: absolute; 
+            right: 0; 
+            top: 50%; 
+            transform: translateY(-50%); 
+            cursor: pointer;
+            background-color: transparent;
+            border: none;
+            padding: 8px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s;
+        }
+        
+        .dark-mode-toggle:hover {
+            background-color: var(--hover-color-light);
+        }
+        
+        body.dark-mode .dark-mode-toggle:hover {
+            background-color: var(--hover-color-dark);
+        }
+        
+        .dark-mode-toggle .icon {
+            display: none;
+            width: 20px;
+            height: 20px;
+            stroke: var(--secondary-text-color);
+            transition: stroke 0.3s;
+        }
+        
+        .dark-mode-toggle:hover .icon {
+             stroke: var(--primary-color);
+        }
+
+        .dark-mode-toggle .icon.active {
+            display: block;
+        }
+
+        .main-tab-content {
+            display: none;
+        }
+
+        .main-tab-content.active {
+            display: block;
+        }
+
+        .week-container {
+            background-color: var(--card-background);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s;
+        }
+
+        .week-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        body.dark-mode .week-container:hover {
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.8);
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            color: var(--primary-color);
+            margin-top: 0;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+            transition: color 0.3s;
+        }
+
+        .day-tabs {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            border-bottom: none;
+            gap: 8px;
+        }
+
+        .day-tab {
+            padding: 8px 15px;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--secondary-text-color);
+            background-color: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, transform 0.2s ease-out;
+        }
+
+        .day-tab:hover:not(.active) {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .day-tab.active {
+            color: white;
+            background-color: #0056b3;
+            border-color: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        .day-content {
+            display: none;
+        }
+        
+        .day-content.active {
+            display: block;
+        }
+
+        .period {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+            transition: border-color 0.3s;
+        }
+        
+        .period:last-child {
+            border-bottom: none;
+        }
+
+        .period-header {
+            font-weight: bold;
+            color: var(--primary-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 0 0 70px;
+            transition: color 0.3s;
+        }
+
+        .period-time {
+            font-size: 0.75rem;
+            font-weight: normal;
+            color: var(--secondary-text-color);
+            margin-top: 4px;
+        }
+
+        .names-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        #view-tab-content .names-list li {
+            padding: 4px 10px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border: 1px solid transparent;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+            cursor: default;
+            color: white;
+        }
+
+        /* Status Colors */
+        #view-tab-content .names-list li.status-free {
+            background-color: #2ecc71; /* blue */
+        }
+        #view-tab-content .names-list li.status-supervised {
+            background-color: #f39c12; /* Orange */
+        }
+        #view-tab-content .names-list li.status-assessment {
+            background-color: #e74c3c; /* Red */
+        }
+
+        .empty-day-message {
+            color: var(--secondary-text-color);
+            text-align: center;
+            font-style: italic;
+            padding: 2rem 0;
+        }
+
+        #view-tab-content .names-list li.empty-name-slot {
+            background-color: transparent;
+            color: var(--secondary-text-color);
+            border-color: transparent;
+            font-style: italic;
+            cursor: default;
+            box-shadow: none;
+        }
+
+        .compare-section {
+            background-color: var(--card-background);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .checklist-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            background-color: var(--card-background);
+            color: var(--text-color);
+            transition: background-color 0.3s, border-color 0.3s, color 0.3s, transform 0.2s ease-out;
+        }
+
+        .checklist-item:hover:not(.selected) {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        .checklist-item.selected {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        .results-container {
+            padding-top: 1rem;
+            border-top: 2px solid var(--border-color);
+        }
+        
+        .results-week {
+            margin-bottom: 2rem;
+        }
+        
+        .results-week-title {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .results-day {
+            margin-bottom: 1rem;
+        }
+        
+        .results-day-title {
+            font-weight: bold;
+            color: var(--text-color);
+            padding-bottom: 5px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .results-list {
+            list-style-type: none;
+            padding: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .results-list li {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        .empty-results {
+            color: var(--secondary-text-color);
+            font-style: italic;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 1rem; }
+            h1 { font-size: 2rem; }
+            .period { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .period-header { flex-direction: row; gap: 10px; flex: none; }
+            .names-list { justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-tabs">
+            <div class="main-tab active" data-tab="view">View</div>
+            <div class="main-tab" data-tab="compare">Compare</div>
+            <div class="dark-mode-toggle" id="darkModeToggle">
+                <svg id="moon-icon" class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+                <svg id="sun-icon" class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+            </div>
+        </div>
+
+        <div id="view-tab-content" class="main-tab-content active">
+            <div id="timetable-container"></div>
+        </div>
+        
+        <div id="compare-tab-content" class="main-tab-content">
+            <div class="compare-section">
+                <h2>Select Names to Compare</h2>
+                <div id="checklist-container" class="checklist-container"></div>
+                <div id="results-container" class="results-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ADD NEW FILENAMES HERE (without .json) as you add them to /people/
+        const peopleList = ["Aartheesh", "Advait", "Alvin OA", "Chukwudi", "Luciano", "Nithinan", "Prithvi", "Rethika", "Anushjan", "Alvin Ng"]; 
+        
+        let timetableData = { "Week1": {}, "Week2": {} };
+        const periodTimes = { "P1": "9:00", "P2": "10:00", "P3": "11:20", "P4": "12:20", "P5": "13:55", "P6": "15:10" };
+        const periods = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6'];
+
+        const timetableContainer = document.getElementById('timetable-container');
+        const checklistContainer = document.getElementById('checklist-container');
+        const resultsContainer = document.getElementById('results-container');
+        const mainTabs = document.querySelectorAll('.main-tab');
+        const mainTabContents = document.querySelectorAll('.main-tab-content');
+
+        async function loadAllData() {
+            for (const person of peopleList) {
+                try {
+                    const response = await fetch(`people/${person}.json`);
+                    const data = await response.json();
+                    processPersonData(data);
+                } catch (e) {
+                    console.error("Error loading " + person, e);
+                }
+            }
+            renderViewTab();
+            renderChecklist();
+            
+            // Restore session
+            const lastSelected = JSON.parse(localStorage.getItem('selectedTime'));
+            setActive(lastSelected?.week || 'Week1', lastSelected?.day || 'Monday');
+            if (localStorage.getItem('activeTab') === 'compare') switchMainTab('compare');
+        }
+
+        function processPersonData(data) {
+            data.selections.forEach(sel => {
+                const [weekRaw, day] = sel.day.split(' - ');
+                const week = weekRaw.replace(' ', ''); // "Week 1" -> "Week1"
+                const period = sel.period;
+                
+                if (!timetableData[week]) timetableData[week] = {};
+                if (!timetableData[week][day]) timetableData[week][day] = {};
+                if (!timetableData[week][day][period]) timetableData[week][day][period] = [];
+                
+                timetableData[week][day][period].push({
+                    name: data.name,
+                    status: sel.status
+                });
+            });
+        }
+
+        function renderDay(dayData) {
+            const isDayEmpty = Object.values(dayData).flat().length === 0;
+            if (isDayEmpty) return '<p class="empty-day-message">No one is free the whole day</p>';
+
+            let dayHtml = '';
+            periods.forEach(period => {
+                const entries = dayData[period] || [];
+                const namesHtml = entries.length > 0
+                    ? entries.map(e => {
+                        let cls = 'status-free';
+                        if (e.status === 'Supervised Study') cls = 'status-supervised';
+                        if (e.status === 'Assessment') cls = 'status-assessment';
+                        return `<li class="${cls}">${e.name}</li>`;
+                    }).join('')
+                    : '<li class="empty-name-slot">No one</li>';
+                
+                dayHtml += `
+                    <div class="period">
+                        <div class="period-header">${period}<span class="period-time">${periodTimes[period]}</span></div>
+                        <ul class="names-list">${namesHtml}</ul>
+                    </div>`;
+            });
+            return dayHtml;
+        }
+
+        function renderViewTab() {
+            timetableContainer.innerHTML = '';
+            Object.keys(timetableData).forEach(week => {
+                const weekDiv = document.createElement('div');
+                weekDiv.className = 'week-container';
+                weekDiv.dataset.week = week;
+                weekDiv.innerHTML = `<h2>${week.replace('Week', 'Week ')}</h2>`;
+
+                const tabs = document.createElement('div');
+                tabs.className = 'day-tabs';
+                const contentWrapper = document.createElement('div');
+
+                ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].forEach(day => {
+                    const tab = document.createElement('div');
+                    tab.className = 'day-tab';
+                    tab.textContent = day;
+                    tab.dataset.day = day;
+                    tab.onclick = () => {
+                        setActive(week, day);
+                        localStorage.setItem('selectedTime', JSON.stringify({ week, day }));
+                    };
+
+                    const content = document.createElement('div');
+                    content.className = 'day-content';
+                    content.id = `${week}-${day}-content`;
+                    content.innerHTML = renderDay(timetableData[week]?.[day] || {});
+
+                    tabs.appendChild(tab);
+                    contentWrapper.appendChild(content);
+                });
+
+                weekDiv.appendChild(tabs);
+                weekDiv.appendChild(contentWrapper);
+                timetableContainer.appendChild(weekDiv);
+            });
+        }
+
+        function setActive(week, day) {
+            document.querySelectorAll('.day-tab, .day-content').forEach(el => el.classList.remove('active'));
+            const tab = document.querySelector(`.week-container[data-week="${week}"] .day-tab[data-day="${day}"]`);
+            const content = document.getElementById(`${week}-${day}-content`);
+            if (tab && content) {
+                tab.classList.add('active');
+                content.classList.add('active');
+            }
+        }
+
+        function renderChecklist() {
+            const allNames = [...new Set(Object.values(timetableData).flatMap(w => Object.values(w).flatMap(d => Object.values(d).flatMap(p => p.map(e => e.name)))))].sort();
+            const selected = JSON.parse(localStorage.getItem('selectedNames')) || [];
+            checklistContainer.innerHTML = '';
+            allNames.forEach(name => {
+                const item = document.createElement('div');
+                item.className = 'checklist-item' + (selected.includes(name) ? ' selected' : '');
+                item.textContent = name;
+                item.onclick = () => {
+                    item.classList.toggle('selected');
+                    compareTimetables();
+                };
+                checklistContainer.appendChild(item);
+            });
+            if (selected.length > 0) compareTimetables();
+        }
+
+        function compareTimetables() {
+            const selected = Array.from(document.querySelectorAll('.checklist-item.selected')).map(i => i.textContent);
+            localStorage.setItem('selectedNames', JSON.stringify(selected));
+            resultsContainer.innerHTML = '';
+
+            if (selected.length < 2) {
+                resultsContainer.innerHTML = '<p class="empty-results">Select at least two names.</p>';
+                return;
+            }
+
+            let globalFound = false;
+            Object.keys(timetableData).forEach(week => {
+                let weekHtml = '';
+                Object.keys(timetableData[week]).forEach(day => {
+                    const common = periods.filter(p => {
+                        const names = (timetableData[week][day][p] || []).map(e => e.name);
+                        return selected.every(n => names.includes(n));
+                    });
+                    if (common.length > 0) {
+                        weekHtml += `<div class="results-day"><div class="results-day-title">${day}:</div><ul class="results-list">${common.map(p => `<li>${p}</li>`).join('')}</ul></div>`;
+                    }
+                });
+                if (weekHtml) {
+                    globalFound = true;
+                    resultsContainer.innerHTML += `<div class="results-week"><h3 class="results-week-title">${week.replace('Week', 'Week ')}</h3>${weekHtml}</div>`;
+                }
+            });
+            if (!globalFound) resultsContainer.innerHTML = '<p class="empty-results">No common periods found.</p>';
+        }
+
+        function switchMainTab(tab) {
+            mainTabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+            mainTabContents.forEach(c => c.classList.toggle('active', c.id === `${tab}-tab-content`));
+            localStorage.setItem('activeTab', tab);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAllData();
+            mainTabs.forEach(t => t.onclick = () => switchMainTab(t.dataset.tab));
+            
+            // Dark Mode
+            const toggle = document.getElementById('darkModeToggle');
+            const setTheme = (dark) => {
+                document.body.classList.toggle('dark-mode', dark);
+                document.getElementById('moon-icon').classList.toggle('active', !dark);
+                document.getElementById('sun-icon').classList.toggle('active', dark);
+                localStorage.setItem('darkMode', dark);
+            };
+            toggle.onclick = () => setTheme(!document.body.classList.contains('dark-mode'));
+            setTheme(localStorage.getItem('darkMode') === 'true');
+        });
+    </script>
+</body>
+</html>
